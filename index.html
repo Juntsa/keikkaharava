@@ -1,0 +1,685 @@
+<title>Keikkaharava</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;700&display=swap">
+<style>
+  /* Layout: pysty pino — vuorovalinta, mittaristo, laattapiha, tulos. Kenttä vierii vaakaan omassa laatikossaan. */
+  :root {
+    --ground: #dfe2d6;      /* pihan sora */
+    --panel: #cdd2c2;
+    --slab: #aeb49f;        /* betonilaatta, koskematon */
+    --slab-hi: #ccd1bf;
+    --slab-lo: #7d8470;
+    --dug: #eef0e8;         /* raivattu laatta — selvästi vaaleampi */
+    --line: #a8ae99;
+    --ink: #1f241c;
+    --ink-soft: #5f6655;
+    --rose: #b0304b;        /* ruusu = palkinto */
+    --rose-ink: #fff2f3;
+    --warn: #b8761a;        /* keikkakeltainen */
+    --display-bg: #23271f;
+    --display: #d8e06a;
+    --n1: #2f5fc7; --n2: #2f7d43; --n3: #b0304b; --n4: #5b46b8;
+    --n5: #96561b; --n6: #15756c; --n7: #3a3f34; --n8: #777d6c;
+    --font-display: 'Bricolage Grotesque', 'Trebuchet MS', system-ui, sans-serif;
+    --font-ui: 'Hanken Grotesk', 'Segoe UI', system-ui, sans-serif;
+    --size: 34px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #171a15;
+      --panel: #1f231c;
+      --slab: #434a3b;
+      --slab-hi: #5a6250;
+      --slab-lo: #22261e;
+      --dug: #191c16;
+      --line: #2e332a;
+      --ink: #e7ead f;
+      --ink: #e7eadf;
+      --ink-soft: #949a89;
+      --rose: #e4647e;
+      --rose-ink: #1a1114;
+      --warn: #e0a24a;
+      --display-bg: #0f110d;
+      --display: #c9d35e;
+      --n1: #7fa6ff; --n2: #6fcf8a; --n3: #ff8197; --n4: #b0a2ff;
+      --n5: #eda763; --n6: #52d2c6; --n7: #dfe3d7; --n8: #949a89;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #171a15;
+    --panel: #1f231c;
+    --slab: #434a3b;
+    --slab-hi: #5a6250;
+    --slab-lo: #22261e;
+    --dug: #191c16;
+    --line: #2e332a;
+    --ink: #e7eadf;
+    --ink-soft: #949a89;
+    --rose: #e4647e;
+    --rose-ink: #1a1114;
+    --warn: #e0a24a;
+    --display-bg: #0f110d;
+    --display: #c9d35e;
+    --n1: #7fa6ff; --n2: #6fcf8a; --n3: #ff8197; --n4: #b0a2ff;
+    --n5: #eda763; --n6: #52d2c6; --n7: #dfe3d7; --n8: #949a89;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 22px 36px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 1.1rem + 2.6vw, 2.6rem);
+    font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+    margin: 0 0 6px; text-wrap: balance;
+  }
+  .lede { margin: 0; color: var(--ink-soft); font-size: 0.95rem; max-width: 56ch; }
+
+  .shifts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .shifts button {
+    font: 700 0.78rem/1 var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 10px 14px; cursor: pointer; border-radius: 2px;
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  }
+  .shifts button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+  .shifts span { display: block; font-size: 0.68rem; letter-spacing: 0.02em; text-transform: none; opacity: 0.7; margin-top: 3px; font-weight: 500; }
+
+  .hud { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); padding: 10px; }
+  .gauge {
+    background: var(--display-bg); color: var(--display);
+    font-variant-numeric: tabular-nums; font-weight: 700;
+    padding: 8px 12px; border: 1px solid var(--line); text-align: center; min-width: 76px;
+  }
+  .gauge b { display: block; font-size: 1.35rem; line-height: 1.05; }
+  .gauge span { display: block; font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-top: 2px; }
+  .reset {
+    font-size: 1.6rem; line-height: 1; width: 56px; height: 54px; cursor: pointer;
+    background: var(--slab); border: 2px solid; border-color: var(--slab-hi) var(--slab-lo) var(--slab-lo) var(--slab-hi);
+  }
+  .reset:active { border-color: var(--slab-lo) var(--slab-hi) var(--slab-hi) var(--slab-lo); }
+  .hud .spacer { flex: 1 1 auto; min-width: 0; }
+  .markbtn {
+    font: 700 0.78rem/1 var(--font-ui); padding: 12px 14px; cursor: pointer; border-radius: 2px;
+    background: transparent; color: var(--ink); border: 1px solid var(--line);
+  }
+  .markbtn[aria-pressed="true"] { background: var(--warn); color: var(--display-bg); border-color: var(--warn); }
+
+  .yard { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); padding: 10px; }
+  .board {
+    display: grid; grid-template-columns: repeat(var(--cols), var(--size));
+    gap: 2px; width: max-content; margin: 0 auto;
+  }
+  .slab {
+    width: var(--size); height: var(--size); padding: 0; cursor: pointer;
+    font-family: var(--font-display); font-weight: 800;
+    font-size: calc(var(--size) * 0.5); line-height: 1;
+    background: var(--slab); color: var(--ink);
+    border: 2px solid; border-color: var(--slab-hi) var(--slab-lo) var(--slab-lo) var(--slab-hi);
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none;
+  }
+  .slab:focus-visible { outline: 3px solid var(--rose); outline-offset: -3px; }
+  .slab.dug {
+    background: var(--dug); cursor: default;
+    border: 2px solid var(--dug); box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .slab.mark { color: var(--warn); font-size: calc(var(--size) * 0.44); }
+  .slab.hit { background: var(--warn); border: 1px solid var(--warn); }
+  .slab.miss { color: var(--rose); }
+  .slab.n1 { color: var(--n1) } .slab.n2 { color: var(--n2) } .slab.n3 { color: var(--n3) }
+  .slab.n4 { color: var(--n4) } .slab.n5 { color: var(--n5) } .slab.n6 { color: var(--n6) }
+  .slab.n7 { color: var(--n7) } .slab.n8 { color: var(--n8) }
+
+  .status { min-height: 1.5em; font-weight: 700; font-size: 0.95rem; }
+
+  /* tuloskortit */
+  .card { border: 1px solid var(--line); padding: 16px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .card.loss { background: var(--panel); border-left: 5px solid var(--warn); }
+  .card.winc { background: var(--panel); border-left: 5px solid var(--rose); }
+  .ticket { flex: 1 1 240px; min-width: 0; }
+  .ticket .tag { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
+  .ticket h2 { font-family: var(--font-display); font-size: 1.15rem; margin: 6px 0 4px; font-weight: 700; text-wrap: balance; }
+  .ticket p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+  .verse {
+    margin: 10px 0 0; font-family: var(--font-display); font-size: 1.02rem; font-weight: 500;
+    line-height: 1.55; color: var(--ink); white-space: pre-line;
+  }
+  .credit { margin: 10px 0 0; font-size: 0.76rem; color: var(--ink-soft); }
+  .ticket .markbtn { margin-top: 10px; }
+  .bush { flex: 0 0 auto; width: 132px; max-width: 100%; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bush svg { transform-origin: 50% 100%; animation: grow 700ms cubic-bezier(.2,.8,.3,1) both; }
+    @keyframes grow { from { transform: scale(0.3) translateY(14px); opacity: 0 } to { transform: none; opacity: 1 } }
+    .slab.dug { transition: background 90ms ease; }
+  }
+
+  .notes { border-top: 1px solid var(--line); padding-top: 14px; color: var(--ink-soft); font-size: 0.86rem; }
+  .notes ul { margin: 8px 0 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 5px; }
+  .notes b { color: var(--ink); }
+
+  @media (max-width: 520px) { :root { --size: 30px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Keikkaharava</h1>
+    <p class="lede">Avaa koko piha osumatta keikkaan. Numero kertoo, montako keikkaa makaa viereisissä kahdeksassa laatassa — sen avulla päättelet, mihin on turvallista astua. Kolme keikkaa saa ottaa; kolmas katkaisee vuoron. Laulu soi vasta kun koko piha on auki.</p>
+  </header>
+
+  <div class="shifts" role="group" aria-label="Vuoro">
+    <button type="button" data-shift="aamu" aria-pressed="true">Aamuvuoro<span>9 × 9 · 8 keikkaa</span></button>
+    <button type="button" data-shift="paiva" aria-pressed="false">Päivävuoro<span>12 × 12 · 25 keikkaa</span></button>
+    <button type="button" data-shift="paivystys" aria-pressed="false">Päivystys<span>16 × 16 · 50 keikkaa</span></button>
+  </div>
+
+  <div class="hud">
+    <div class="gauge" id="gJobs"><b>8</b><span>Keikkaa</span></div>
+    <button type="button" class="reset" id="reset" aria-label="Uusi vuoro">🧑‍🔧</button>
+    <div class="gauge" id="gTime"><b>0:00</b><span>Vuoro</span></div>
+    <div class="gauge" id="gStrikes"><b>0/3</b><span>Osumat</span></div>
+    <div class="spacer"></div>
+    <button type="button" class="markbtn" id="musicBtn" aria-pressed="false">♪ Laulu</button>
+    <button type="button" class="markbtn" id="markMode" aria-pressed="false">⚠️ Merkkaustila</button>
+  </div>
+
+  <div class="yard">
+    <div class="board" id="board" role="grid" aria-label="Piha"></div>
+  </div>
+
+  <div class="status" id="status" role="status">Astu ensimmäiselle laatalle.</div>
+
+  <div class="card loss" id="lossCard" hidden>
+    <div class="ticket">
+      <div class="tag">Vikailmoitus · huoltokirja</div>
+      <h2 id="lossTitle">Kohde 221 · A-rappu</h2>
+      <p id="lossText">Astuit keikan päälle.</p>
+    </div>
+  </div>
+
+  <div class="card winc" id="winCard" hidden>
+    <div class="bush" id="bush" aria-hidden="true"></div>
+    <div class="ticket">
+      <div class="tag">Vuoro selvitetty</div>
+      <h2 id="winTitle">Päivä ilman yhtäkään keikkaa.</h2>
+      <p class="verse">♪ Laulaen teemme yhdessä hyvää</p>
+      <button type="button" class="markbtn" id="playBtn">⏸ Pysäytä laulu</button>
+      <p class="credit">Palkinto: ruusupuska pääsisäänkäynnin viereen ja laulu alusta loppuun. Istutus omalla ajalla.</p>
+      <audio id="song" preload="auto" src="voittolaulu.m4a"></audio>
+    </div>
+  </div>
+
+  <div class="notes">
+    <b>Ohjaus</b>
+    <ul>
+      <li>Vasen klikkaus astuu laatalle. Oikea klikkaus merkkaa epäillyn keikan. Puhelimella pitkä painallus tai merkkaustila.</li>
+      <li>Klikkaus avatun numeron päältä avaa naapurit, kun merkintöjä on numeron verran.</li>
+      <li>Vuoro on selvä, kun kaikki keikattomat laatat ovat auki — merkkaaminen yksin ei riitä. Osuma paljastaa keikan ja peli jatkuu, kolmas lopettaa.</li>
+      <li>Yksi HTML-tiedosto, ei kirjastoja, ei palvelinta. Ei kaupalliseen käyttöön.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SHIFTS = {
+    aamu:      { c: 9,  r: 9,  m: 8  },
+    paiva:     { c: 12, r: 12, m: 25 },
+    paivystys: { c: 16, r: 16, m: 50 }
+  };
+
+  // Vikailmoitukset arvotaan hävityn pelin korttiin.
+  var JOBS = [
+    ["A-rappu, 3. krs", "Porrasvalo vilkkuu. Asukas soittanut kolmesti aamupäivän aikana."],
+    ["B 27, keittiö", "Allaskaapin liitos vuotaa. Kaapin pohja jo turvonnut."],
+    ["Pesutupa", "Kuivausrumpu ei lämpene. Varauskirja täynnä viikon loppuun."],
+    ["Parkkipaikka 14", "Lämmitystolppa ei anna virtaa. Pakkasta luvattu yöksi."],
+    ["Pääsisäänkäynti", "Oven pumppu ei vedä kiinni. Ovi jäänyt auki koko yön."],
+    ["Roskakatos", "Lukko jäätynyt. Jäteauto kävi ja lähti."],
+    ["C 12, olohuone", "Patteri kolisee. Ilmaus tekemättä koko linjasta."],
+    ["Hissi, D-rappu", "Pysähtyy 20 cm tason alapuolelle. Rollaattorilla ei pääse."],
+    ["Piha, pääoven edusta", "Reunakivi irti. Kompastumisvaara, kuva liitteenä."],
+    ["Katto, julkisivu etelä", "Räystäältä tippuu jäätä. Varoitusteippi puuttuu."],
+    ["Sadevesikaivo, takapiha", "Tukossa. Lätäkkö ulottuu kellarin oville."],
+    ["D-rappu, 1. krs", "Porrassiivous jäänyt väliin. Isännöitsijä kysynyt perään."],
+    ["Lämmönjakohuone", "Kiertovesipumppu ulisee. Ääni kuuluu alakerran asuntoon."],
+    ["Leikkipaikka", "Keinun ketju kulunut puhki. Alue rajattava heti."]
+  ];
+
+  var boardEl  = document.getElementById("board");
+  var resetEl  = document.getElementById("reset");
+  var gJobs    = document.getElementById("gJobs").querySelector("b");
+  var gTime    = document.getElementById("gTime").querySelector("b");
+  var gStrikes = document.getElementById("gStrikes").querySelector("b");
+  var statusEl = document.getElementById("status");
+  var markBtn  = document.getElementById("markMode");
+  var lossCard = document.getElementById("lossCard");
+  var winCard  = document.getElementById("winCard");
+  var lossTitle = document.getElementById("lossTitle");
+  var lossText  = document.getElementById("lossText");
+  var winTitle  = document.getElementById("winTitle");
+  var song      = document.getElementById("song");
+  var playBtn   = document.getElementById("playBtn");
+  var musicBtn  = document.getElementById("musicBtn");
+
+  // Laulu ei toistu eikä käynnisty itsestään: se soi läpi kerran joko napista
+  // tai voitosta. Selain ei päästä ääntä soimaan ennen käyttäjän klikkausta,
+  // ja molemmat reitit alkavat klikkauksesta.
+  function playSong(fromStart) {
+    try {
+      if (fromStart) song.currentTime = 0;
+      var p = song.play();
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
+  function syncPlayBtn() {
+    var playing = !song.paused;
+    playBtn.textContent  = playing ? "⏸ Pysäytä laulu" : "▶ Soita laulu";
+    musicBtn.textContent = playing ? "⏸ Laulu" : "♪ Laulu";
+    musicBtn.setAttribute("aria-pressed", String(playing));
+  }
+  function toggleSong() {
+    if (song.paused) playSong(false); else song.pause();
+  }
+  song.addEventListener("play", syncPlayBtn);
+  song.addEventListener("pause", syncPlayBtn);
+  song.addEventListener("ended", syncPlayBtn);
+  playBtn.addEventListener("click", toggleSong);
+  musicBtn.addEventListener("click", toggleSong);
+
+  document.getElementById("bush").innerHTML = roseBush();
+
+  var shift = "aamu";
+  var C, R, M;
+  var job, num, dug, mark;
+  var started, over, digCount, markCount, strikes;
+  var tick = null, secs = 0;
+  var markMode = false;
+  var MAX_STRIKES = 3;
+
+  function idx(x, y) { return y * C + x; }
+
+  function neighbors(i) {
+    var x = i % C, y = (i / C) | 0, out = [];
+    for (var dy = -1; dy <= 1; dy++) {
+      for (var dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        var nx = x + dx, ny = y + dy;
+        if (nx >= 0 && nx < C && ny >= 0 && ny < R) out.push(idx(nx, ny));
+      }
+    }
+    return out;
+  }
+
+  // Laskuri saa mennä pakkasen puolelle: miinusluku kertoo, että merkkauksia
+  // on enemmän kuin keikkoja, eli jokin niistä on väärässä paikassa.
+  function setJobs() {
+    var left = M - markCount;
+    gJobs.textContent = left;
+    gJobs.parentNode.style.color = left < 0 ? "var(--warn)" : "";
+  }
+
+  function clock(s) {
+    var m = (s / 60) | 0;
+    return m + ":" + ("0" + (s % 60)).slice(-2);
+  }
+
+  function reset() {
+    var S = SHIFTS[shift];
+    C = S.c; R = S.r; M = S.m;
+    var n = C * R;
+    job  = new Uint8Array(n);
+    num  = new Uint8Array(n);
+    dug  = new Uint8Array(n);
+    mark = new Uint8Array(n);
+    started = over = false;
+    digCount = markCount = strikes = 0;
+    gStrikes.textContent = "0/" + MAX_STRIKES;
+    stopTimer();
+    secs = 0;
+    gTime.textContent = "0:00";
+    setJobs();
+    resetEl.textContent = "🧑‍🔧";
+    statusEl.textContent = "Astu ensimmäiselle laatalle.";
+    lossCard.hidden = true;
+    winCard.hidden = true;
+    build();
+  }
+
+  function build() {
+    boardEl.style.setProperty("--cols", C);
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < C * R; i++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "slab";
+      b.dataset.i = i;
+      b.setAttribute("aria-label", "Laatta " + ((i % C) + 1) + "," + (((i / C) | 0) + 1));
+      frag.appendChild(b);
+    }
+    boardEl.replaceChildren(frag);
+  }
+
+  // Keikat arvotaan vasta ensimmäisen askeleen jälkeen — aloituslaatta
+  // ja sen naapurit jäävät vapaiksi, jotta peli aukeaa kunnolla.
+  function placeJobs(safe) {
+    var banned = {};
+    banned[safe] = 1;
+    neighbors(safe).forEach(function (j) { banned[j] = 1; });
+
+    var pool = [];
+    for (var i = 0; i < C * R; i++) if (!banned[i]) pool.push(i);
+    for (var k = pool.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var t = pool[k]; pool[k] = pool[j]; pool[j] = t;
+    }
+    for (var q = 0; q < M && q < pool.length; q++) job[pool[q]] = 1;
+
+    for (var c = 0; c < C * R; c++) {
+      if (job[c]) continue;
+      var cnt = 0;
+      neighbors(c).forEach(function (nb) { if (job[nb]) cnt++; });
+      num[c] = cnt;
+    }
+  }
+
+  function paint(i) {
+    var el = boardEl.children[i];
+    if (!el) return;
+    el.className = "slab";
+    el.textContent = "";
+    if (dug[i]) {
+      el.classList.add("dug");
+      if (job[i]) {
+        el.textContent = "🔧";
+      } else if (num[i]) {
+        el.textContent = num[i];
+        el.classList.add("n" + num[i]);
+      }
+    } else if (mark[i]) {
+      el.classList.add("mark");
+      el.textContent = "⚠️";
+    }
+  }
+
+  function paintAll() { for (var i = 0; i < C * R; i++) paint(i); }
+
+  function step(start) {
+    if (dug[start] || mark[start]) return;
+    if (job[start]) return hit(start);
+
+    var stack = [start];
+    while (stack.length) {
+      var i = stack.pop();
+      if (dug[i] || mark[i]) continue;
+      dug[i] = 1;
+      digCount++;
+      paint(i);
+      if (num[i] === 0) {
+        neighbors(i).forEach(function (nb) {
+          if (!dug[nb] && !mark[nb] && !job[nb]) stack.push(nb);
+        });
+      }
+    }
+    checkWin();
+  }
+
+  function chord(i) {
+    if (!dug[i] || !num[i]) return;
+    var m = 0, closed = [];
+    neighbors(i).forEach(function (nb) {
+      if (mark[nb]) m++;
+      else if (!dug[nb]) closed.push(nb);
+    });
+    if (m !== num[i]) return;
+    for (var k = 0; k < closed.length; k++) {
+      if (job[closed[k]]) return hit(closed[k]);
+    }
+    closed.forEach(step);
+  }
+
+  function toggleMark(i) {
+    if (over || dug[i]) return;
+    mark[i] = mark[i] ? 0 : 1;
+    markCount += mark[i] ? 1 : -1;
+    setJobs();
+    paint(i);
+  }
+
+  function hit(i) {
+    strikes++;
+    gStrikes.textContent = strikes + "/" + MAX_STRIKES;
+
+    var pick = JOBS[Math.floor(Math.random() * JOBS.length)];
+    lossTitle.textContent = pick[0];
+    lossText.textContent = pick[1];
+    lossCard.hidden = false;
+    winCard.hidden = true;
+
+    // Keikka on nyt tiedossa: laatta auki ja merkattu. Se ei kelpaa
+    // raivatuksi laataksi, joten digCount ei kasva.
+    if (!mark[i]) { mark[i] = 1; markCount++; }
+    dug[i] = 1;
+    paint(i);
+    boardEl.children[i].classList.add("hit");
+    setJobs();
+
+    if (strikes < MAX_STRIKES) {
+      resetEl.textContent = "😬";
+      statusEl.textContent = "Keikka osui kohdalle. Pelivaraa jäljellä " +
+        (MAX_STRIKES - strikes) + ". Piha jatkuu.";
+      checkWin();
+      return;
+    }
+
+    over = true;
+    stopTimer();
+    for (var k = 0; k < C * R; k++) {
+      if (job[k]) dug[k] = 1;
+      paint(k);
+      if (!job[k] && mark[k]) {
+        var el = boardEl.children[k];
+        el.classList.add("miss");
+        el.textContent = "✕";
+      }
+    }
+    boardEl.children[i].classList.add("hit");
+    resetEl.textContent = "🫠";
+    statusEl.textContent = "Kolmas keikka — vuoro katkesi. Uusi vuoro naama-napista.";
+  }
+
+  function checkWin() {
+    if (digCount !== C * R - M) return;
+    over = true;
+    stopTimer();
+    for (var k = 0; k < C * R; k++) {
+      if (job[k] && !mark[k]) { mark[k] = 1; markCount++; paint(k); }
+    }
+    setJobs();
+    resetEl.textContent = "😎";
+    statusEl.textContent = "Koko piha kierretty puhtaana.";
+    winTitle.textContent = "Päivä ilman yhtäkään keikkaa — " + clock(secs) + ".";
+    winCard.hidden = false;
+    lossCard.hidden = true;
+    playSong(true);
+  }
+
+  function startTimer() {
+    if (tick) return;
+    tick = setInterval(function () { secs++; gTime.textContent = clock(secs); }, 1000);
+  }
+  function stopTimer() { if (tick) { clearInterval(tick); tick = null; } }
+
+  function cellIndex(e) {
+    var el = e.target.closest(".slab");
+    return el ? +el.dataset.i : -1;
+  }
+
+  function tap(i) {
+    if (over) return;
+    if (markMode) return toggleMark(i);
+    if (!started) {
+      placeJobs(i);
+      started = true;
+      startTimer();
+      statusEl.textContent = "Vuoro käynnissä.";
+    }
+    if (dug[i]) chord(i);
+    else if (!mark[i]) step(i);
+  }
+
+  var pressTimer = null, pressIndex = -1, pressX = 0, pressY = 0;
+  var longFired = false, lastTouch = 0;
+
+  // Hiiri hoidetaan click-tapahtumasta, kosketus kokonaan pointer-tapahtumista.
+  // Nämä eivät saa laueta kahdesti, joten click ohitetaan heti kosketuksen jälkeen.
+  boardEl.addEventListener("click", function (e) {
+    if (Date.now() - lastTouch < 800) return;
+    var i = cellIndex(e);
+    if (i >= 0) tap(i);
+  });
+
+  boardEl.addEventListener("contextmenu", function (e) {
+    var i = cellIndex(e);
+    if (i < 0) return;
+    e.preventDefault();
+    if (!over) toggleMark(i);
+  });
+
+  boardEl.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "mouse") return;
+    var i = cellIndex(e);
+    if (i < 0) return;
+    pressIndex = i; pressX = e.clientX; pressY = e.clientY; longFired = false;
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(function () {
+      longFired = true;
+      if (!over) {
+        toggleMark(i);
+        if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) {} }
+      }
+    }, 420);
+  });
+
+  // Sormen liike yli 12 px = kentän vieritystä, ei painallusta.
+  boardEl.addEventListener("pointermove", function (e) {
+    if (pressIndex < 0) return;
+    if (Math.abs(e.clientX - pressX) > 12 || Math.abs(e.clientY - pressY) > 12) {
+      clearTimeout(pressTimer); pressTimer = null; pressIndex = -1;
+    }
+  });
+
+  boardEl.addEventListener("pointerup", function (e) {
+    if (e.pointerType === "mouse") return;
+    clearTimeout(pressTimer); pressTimer = null;
+    lastTouch = Date.now();
+    var i = pressIndex;
+    pressIndex = -1;
+    if (i < 0 || longFired) return;
+    tap(i);
+  });
+
+  boardEl.addEventListener("pointercancel", function () {
+    clearTimeout(pressTimer); pressTimer = null; pressIndex = -1;
+  });
+
+  resetEl.addEventListener("click", reset);
+
+  markBtn.addEventListener("click", function () {
+    markMode = !markMode;
+    markBtn.setAttribute("aria-pressed", String(markMode));
+  });
+
+  document.querySelectorAll(".shifts button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      shift = b.dataset.shift;
+      document.querySelectorAll(".shifts button").forEach(function (o) {
+        o.setAttribute("aria-pressed", String(o === b));
+      });
+      reset();
+    });
+  });
+
+  function roseBush() {
+    var roses = [[32, 42], [66, 30], [98, 48], [50, 68], [84, 74]];
+    var petals = roses.map(function (p) {
+      return '<g>' +
+        '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="11" fill="var(--rose)" opacity="0.45"/>' +
+        '<circle cx="' + (p[0] - 4) + '" cy="' + (p[1] - 3) + '" r="7" fill="var(--rose)"/>' +
+        '<circle cx="' + (p[0] + 5) + '" cy="' + (p[1] - 1) + '" r="6" fill="var(--rose)"/>' +
+        '<circle cx="' + p[0] + '" cy="' + (p[1] + 5) + '" r="6" fill="var(--rose)"/>' +
+        '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="var(--rose-ink)"/>' +
+        '</g>';
+    }).join("");
+    return '<svg viewBox="0 0 132 140" width="132" height="140" role="img" aria-label="Ruusupuska">' +
+      '<ellipse cx="66" cy="132" rx="46" ry="7" fill="var(--line)"/>' +
+      '<path d="M66 132 L66 56" stroke="var(--n2)" stroke-width="5" fill="none"/>' +
+      '<path d="M66 110 C46 100 38 78 32 50" stroke="var(--n2)" stroke-width="4" fill="none"/>' +
+      '<path d="M66 104 C86 94 94 74 98 54" stroke="var(--n2)" stroke-width="4" fill="none"/>' +
+      '<path d="M66 118 C54 112 50 92 50 74" stroke="var(--n2)" stroke-width="4" fill="none"/>' +
+      '<path d="M66 116 C78 108 82 92 84 80" stroke="var(--n2)" stroke-width="4" fill="none"/>' +
+      '<ellipse cx="48" cy="96" rx="11" ry="6" fill="var(--n2)" transform="rotate(-28 48 96)"/>' +
+      '<ellipse cx="86" cy="98" rx="11" ry="6" fill="var(--n2)" transform="rotate(26 86 98)"/>' +
+      '<ellipse cx="58" cy="80" rx="10" ry="5" fill="var(--n6)" transform="rotate(-18 58 80)"/>' +
+      '<ellipse cx="78" cy="62" rx="10" ry="5" fill="var(--n6)" transform="rotate(20 78 62)"/>' +
+      petals +
+      '</svg>';
+  }
+
+  function snapshot() {
+    return {
+      shift: shift, secs: secs, started: started, over: over, strikes: strikes,
+      job: Array.from(job), num: Array.from(num),
+      dug: Array.from(dug), mark: Array.from(mark)
+    };
+  }
+
+  function start(data) {
+    if (data && data.job && data.shift && SHIFTS[data.shift]) {
+      shift = data.shift;
+      document.querySelectorAll(".shifts button").forEach(function (o) {
+        o.setAttribute("aria-pressed", String(o.dataset.shift === shift));
+      });
+      reset();
+      job  = Uint8Array.from(data.job);
+      num  = Uint8Array.from(data.num);
+      dug  = Uint8Array.from(data.dug);
+      mark = Uint8Array.from(data.mark);
+      started = data.started; over = data.over; secs = data.secs || 0;
+      strikes = data.strikes || 0;
+      gStrikes.textContent = strikes + "/" + MAX_STRIKES;
+      digCount = 0; markCount = 0;
+      for (var i = 0; i < C * R; i++) { if (dug[i]) digCount++; if (mark[i]) markCount++; }
+      setJobs();
+      gTime.textContent = clock(secs);
+      paintAll();
+      if (started && !over) startTimer();
+      return;
+    }
+    reset();
+  }
+
+  try {
+    if (window.claude && window.claude.hot) {
+      window.claude.hot.snapshot(snapshot);
+      window.claude.hot.ready ? window.claude.hot.ready(start) : start(window.claude.hot.data || {});
+    } else {
+      start({});
+    }
+  } catch (err) {
+    start({});
+  }
+})();
+</script>
